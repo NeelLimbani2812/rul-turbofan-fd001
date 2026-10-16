@@ -91,5 +91,7 @@ with st.expander("About this model and its limits"):
   systematically low.
 - Only FD001 (one operating condition, one fault mode) was used. This is a portfolio demo, not a maintenance tool.
 - The cap was chosen after seeing over-prediction on the official test set; see the project README for details.
+- Data: NASA C-MAPSS FD001. A. Saxena and K. Goebel (2008), "Turbofan Engine Degradation Simulation Data Set", 
+  NASA Prognostics Data Repository, NASA Ames Research Center.
 """
     )
