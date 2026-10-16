@@ -1,0 +1,5 @@
+# Dependencies for the demo app (app/). Pin streamlit to the version you tested locally.
+streamlit
+xgboost==3.4.1
+pandas==2.3.3
+numpy==2.3.5

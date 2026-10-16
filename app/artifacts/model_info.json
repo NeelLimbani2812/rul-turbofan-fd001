@@ -1,0 +1,43 @@
+{
+  "feature_columns": [
+    "cycle",
+    "setting_1",
+    "setting_2",
+    "s_2",
+    "s_3",
+    "s_4",
+    "s_6",
+    "s_7",
+    "s_8",
+    "s_9",
+    "s_11",
+    "s_12",
+    "s_13",
+    "s_14",
+    "s_15",
+    "s_17",
+    "s_20",
+    "s_21",
+    "s_4_roll_mean_5",
+    "s_4_roll_std_5",
+    "s_11_roll_mean_5",
+    "s_11_roll_std_5"
+  ],
+  "constant_columns": [
+    "setting_3",
+    "s_1",
+    "s_5",
+    "s_10",
+    "s_16",
+    "s_18",
+    "s_19"
+  ],
+  "rul_cap": 120,
+  "rolling_window": 5,
+  "official_test_metrics": {
+    "RMSE": 17.92,
+    "MAE": 13.2,
+    "PHM08": 549.26,
+    "Mean Error": -1.49
+  }
+}
