@@ -1,12 +1,14 @@
 # Predictive Maintenance: RUL Estimation for Turbofan Engines
 
+**Live demo:** https://rul-turbofan-fd001-epxmpwifpcmdc5zfmg4xpq.streamlit.app/
+
 A machine learning project that estimates the **Remaining Useful Life (RUL)** of aircraft turbofan engines from sensor data in NASA's C-MAPSS dataset (FD001 subset).
 
 ## Project Overview
 
 Remaining Useful Life (RUL) is the number of operating cycles an engine can still complete before failure. Predicting it supports predictive maintenance by indicating when an engine may need servicing.
 
-This project builds per-engine rolling sensor features, compares three regression models with engine-grouped cross-validation, tests several RUL caps for the training target, and reports an uncapped and a capped XGBoost model on the official test set. Errors are analysed per engine and the final model is interpreted with SHAP.
+This project builds per-engine rolling sensor features, compares three regression models with engine-grouped cross-validation, tests several RUL caps for the training target, and reports an uncapped and a capped XGBoost model on the official test set. Errors are analysed per engine and the final model is interpreted with SHAP. A small Streamlit app lets you explore the model's predictions for each test engine.
 
 ## Dataset
 
@@ -63,11 +65,23 @@ Cap 120 has the lowest RMSE in this validation. Cap 125 performs very similarly,
 
 The uncapped model over-predicts RUL on average (+11.72 cycles). Training on a target capped at 120 removes most of that bias and improves all four metrics. PHM08 is an asymmetric score where late predictions are penalised more than early ones; lower is better.
 
-> Cross-validation RMSE and official-test metrics evaluate different rows (all cycles vs. one last cycle per engine) and must not be compared directly. 
+> Cross-validation RMSE and official-test metrics evaluate different rows (all cycles vs. one last cycle per engine) and must not be compared directly. Validation-stage PHM08 values are not comparable to test PHM08 either, because they sum over different numbers of engines.
 
 ### Model interpretation (SHAP)
 
 The features with the largest mean absolute SHAP value on a 100-row training sample are `s_11_roll_mean_5` (11.79), `s_4_roll_mean_5` (10.11) and `cycle` (8.71), followed by `s_9` and `s_14`. SHAP describes how the fitted model uses its inputs; it does not prove causation, and correlated features share importance.
+
+## Streamlit Demo App
+
+The `app/` folder contains an interactive demo, deployed on Streamlit Community Cloud (see the live demo link above).
+
+- Pick one of the 100 FD001 **test** engines and a cycle; the model sees only the sensor data up to that cycle.
+- The app shows the predicted RUL, the true RUL, the error, a predicted-vs-true RUL chart and the `s_11` / `s_4` sensor traces.
+- True RUL at an earlier cycle is derived as the official RUL at the engine's last observed cycle plus the number of cycles observed after it.
+- The saved model is the same XGBoost model (cap 120) as in the notebook. `app/train_model.py` retrains it and prints the official-test metrics for comparison.
+- The "good / warning / inspect" messages use illustrative thresholds only.
+
+**This is a portfolio demo.** It uses historical, simulated NASA data. It is not connected to any real aircraft or live engine, and it is not a maintenance tool.
 
 ## Limitations
 
@@ -80,23 +94,35 @@ The features with the largest mean absolute SHAP value on a 100-row training sam
 
 ## Technologies
 
-Python 3.11+ (tested on 3.13.9), NumPy 2.3.5, pandas 2.3.3, Matplotlib 3.10.6, scikit-learn 1.7.2, XGBoost 3.4.1, SHAP 0.52.0, Jupyter Notebook.
+Python 3.11+ (tested on 3.13.9), NumPy 2.3.5, pandas 2.3.3, Matplotlib 3.10.6, scikit-learn 1.7.2, XGBoost 3.4.1, SHAP 0.52.0, Jupyter Notebook, Streamlit 1.51.0 (demo app).
 
 ## Project Structure
 
 ```text
 rul-turbofan-fd001/
-├── data/
+├── app/
+│   ├── app.py                  # Streamlit demo app
+│   ├── rul_core.py             # shared feature engineering
+│   ├── train_model.py          # retrains the final model, writes artifacts/
+│   ├── requirements.txt        # dependencies for the demo app
+│   └── artifacts/
+│       ├── model.json          # trained XGBoost model (cap 120)
+│       ├── model_info.json     # feature columns and official-test metrics
+│       ├── demo_test_FD001.csv # NASA FD001 test data used by the demo
+│       └── demo_rul_FD001.csv  # official RUL labels for the test engines
+├── data/                       # not tracked by Git; add the NASA files here
 │   ├── train_FD001.txt
 │   ├── test_FD001.txt
 │   └── RUL_FD001.txt
 ├── notebooks/
 │   └── 01_rul_fd001.ipynb
-├── requirements.txt
+├── requirements.txt            # dependencies for the notebook
 └── README.md
 ```
 
 ## How to Run
+
+### Notebook
 
 1. Download `6. Turbofan Engine Degradation Simulation Data Set.zip` from the [NASA PCoE Data Set Repository](https://www.nasa.gov/intelligent-systems-division/discovery-and-systems-health/pcoe/pcoe-data-set-repository/). Create a `data/` folder in the project root (it is not tracked by Git) and extract `train_FD001.txt`, `test_FD001.txt`, and `RUL_FD001.txt` into it. The ZIP contains all four subsets (FD001–FD004).
 
@@ -117,6 +143,19 @@ rul-turbofan-fd001/
 4. Open `01_rul_fd001.ipynb` and select **Kernel → Restart Kernel and Run All Cells…** to run all cells.
 
 **Reproducibility note:** The scikit-learn version is pinned in `requirements.txt` because cross-validation results, including `GroupKFold` splits, can depend on the library version.
+
+### Streamlit demo app (local)
+
+The trained model and demo data are already included in `app/artifacts/`, so the `data/` folder is not needed to run the app.
+
+From the project root:
+
+```bash
+pip install -r app/requirements.txt
+streamlit run app/app.py
+```
+
+To retrain the model first (needs the NASA files in `data/`): `python app/train_model.py`. It prints the official-test metrics, which should match the table above when the pinned library versions are used.
 
 ## Future Improvements
 
